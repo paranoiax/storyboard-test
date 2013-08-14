@@ -11,6 +11,7 @@ local scene = storyboard.newScene()
 local physics = require "physics"
 physics.start(); physics.pause()
 
+
 --------------------------------------------
 
 -- forward declarations and other locals
@@ -212,7 +213,7 @@ function lostText()
 	transition.to( lostText, { time=750, alpha=1.0 } )
 end
 
-local function update()	
+function update()	
 
 	local dt = getDeltaTime()
 	instance1:toFront()
@@ -249,13 +250,13 @@ function stopShake(event)
 	shake = false
 end
 
-local function onCollision(event)
+function onCollision(event)
 	if (event.phase == "began") then
 		if (event.object1.ID == 'Wall') or (event.object2.ID == 'Wall') then
 			if (event.object1.ID == "balloon") or (event.object2.ID == "balloon") then
 				lost = true
 				lostText()
-				storyboard.gotoScene( "menu", "zoomInOutFade", 500)
+				restart = timer.performWithDelay(10, storyboard.gotoScene( "menu", "zoomInOutFade", 500))
 				balloon.paused = true
 				balloon.canJump = false
 				transition.to( instance1, { time=750, alpha=0.0 } )
@@ -339,9 +340,7 @@ function distanceFrom(x1,y1,x2,y2)
 	return math.floor(distance + .5)
 end
 
-Runtime:addEventListener("collision", onCollision)
 Runtime:addEventListener("touch", onTouch)
-Runtime:addEventListener("enterFrame", update)
 
 group:insert(background)
 group:insert(balloon)
@@ -360,6 +359,8 @@ function scene:enterScene( event )
 	local group = self.view
 	
 	physics.start()
+	Runtime:addEventListener("collision", onCollision)
+	Runtime:addEventListener("enterFrame", update)
 	
 end
 
@@ -368,7 +369,9 @@ function scene:exitScene( event )
 	local group = self.view
 	
 	physics.stop()
-	
+	Runtime:removeEventListener("collision", onCollision)
+	Runtime:removeEventListener("enterFrame", update)
+	Runtime:removeEventListener("touch", onTouch)
 end
 
 -- If scene's view is removed, scene:destroyScene() will be called just prior to:
